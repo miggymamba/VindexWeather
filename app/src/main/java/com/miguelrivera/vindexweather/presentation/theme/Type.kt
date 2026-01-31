@@ -1,4 +1,4 @@
-package com.miguelrivera.vindexweather.ui.theme
+package com.miguelrivera.vindexweather.presentation.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
