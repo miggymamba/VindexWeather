@@ -4,6 +4,8 @@ import android.app.Application
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import dagger.hilt.android.HiltAndroidApp
+import javax.inject.Inject
+import javax.inject.Provider
 
 /**
  * [VindexWeatherApp] serves as the Hilt Entry Point for the app.
@@ -17,13 +19,12 @@ import dagger.hilt.android.HiltAndroidApp
 class VindexWeatherApp : Application(), ImageLoaderFactory {
 
     /**
-     * Eventually there will be a custom OkHttpClient injected here
-     * to share the same cache/network logic between API calls and Image loading.
-     * For now, we return the default ImageLoader.
+     * A [Provider] is injected here to lazy-load the [ImageLoader].
+     * This prevents instantiating the entire network stack instantly at app startup
+     * if it's not strictly needed immediately (startup performance optimization).
      */
-    override fun newImageLoader(): ImageLoader {
-        return ImageLoader.Builder(this)
-            .crossfade(true)
-            .build()
-    }
+    @Inject
+    lateinit var imageLoader: Provider<ImageLoader>
+
+    override fun newImageLoader(): ImageLoader = imageLoader.get()
 }
