@@ -20,7 +20,7 @@ fun getApiKey(): String {
 
     return properties.getProperty("WEATHER_API_KEY")
         ?: System.getenv("WEATHER_API_KEY")
-        ?: "\"MISSING_KEY\""
+        ?: "MISSING_KEY"
 }
 
 android {
