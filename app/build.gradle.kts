@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -8,6 +9,18 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
     alias(libs.plugins.kotlin.serialization)
+}
+
+fun getApiKey(): String {
+    val propertiesFile = project.rootProject.file("local.properties")
+    val properties = Properties()
+    if (propertiesFile.exists()) {
+        properties.load(propertiesFile.inputStream())
+    }
+
+    return properties.getProperty("WEATHER_API_KEY")
+        ?: System.getenv("WEATHER_API_KEY")
+        ?: "\"MISSING_KEY\""
 }
 
 android {
@@ -24,6 +37,9 @@ android {
         versionName = libs.versions.appVersionName.get()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "WEATHER_API_KEY", "\"${getApiKey()}\"")
+        buildConfigField("String", "BASE_URL", "\"https://api.openweathermap.org/data/2.5\"")
     }
 
     buildTypes {
