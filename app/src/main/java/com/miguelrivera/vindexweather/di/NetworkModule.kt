@@ -2,6 +2,7 @@ package com.miguelrivera.vindexweather.di
 
 import com.miguelrivera.vindexweather.BuildConfig
 import com.miguelrivera.vindexweather.core.network.ApiKeyInterceptor
+import com.miguelrivera.vindexweather.data.remote.WeatherApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -72,6 +73,12 @@ object NetworkModule {
             .readTimeout(TIMEOUT_SECONDS,TimeUnit.SECONDS)
             .writeTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideWeatherApi(retrofit: Retrofit): WeatherApi {
+        return retrofit.create(WeatherApi::class.java)
     }
 
     @Provides

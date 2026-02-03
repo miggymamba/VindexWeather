@@ -14,7 +14,7 @@ import javax.inject.Inject
 class ApiKeyInterceptor @Inject constructor() : Interceptor {
 
     private companion object {
-        const val QUERY_PARAM_APP_ID = "appId"
+        const val QUERY_PARAM_APP_ID = "appid"
     }
 
     override fun intercept(chain: Interceptor.Chain): Response {
