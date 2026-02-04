@@ -7,6 +7,7 @@ import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import com.miguelrivera.vindexweather.data.local.database.WeatherDatabase
 import com.miguelrivera.vindexweather.data.local.database.entity.WeatherEntity
+import com.miguelrivera.vindexweather.data.mapper.toWeatherEntities
 import retrofit2.HttpException
 import java.io.IOException
 import javax.inject.Inject
@@ -24,7 +25,7 @@ class WeatherRemoteMediator @Inject constructor(
     private val api: WeatherApi,
     private val lat: Double,
     private val lon: Double
-): RemoteMediator<Int, WeatherEntity>() {
+) : RemoteMediator<Int, WeatherEntity>() {
     override suspend fun load(
         loadType: LoadType,
         state: PagingState<Int, WeatherEntity>
@@ -39,6 +40,7 @@ class WeatherRemoteMediator @Inject constructor(
                     // We never prepend data (no "past" weather in this endpoint).
                     return MediatorResult.Success(endOfPaginationReached = true)
                 }
+
                 LoadType.APPEND -> {
                     // If we have existing data, we stop because the 5-day forecast is a single-shot list.
                     // We do not support "infinite scrolling" to future dates beyond the initial fetch.
@@ -47,6 +49,7 @@ class WeatherRemoteMediator @Inject constructor(
                         return MediatorResult.Success(endOfPaginationReached = true)
                     }
                 }
+
                 LoadType.REFRESH -> {
                     // Explicitly do nothing to let it fall through to the API call.
                     // This comment prevents "Empty Body" warnings.
@@ -57,21 +60,7 @@ class WeatherRemoteMediator @Inject constructor(
             val response = api.getForecast(lat = lat, lon = lon)
 
             // Map DTO to Entity
-            val entities =  response.list.map { dto ->
-                WeatherEntity(
-                    cityName = response.city.name,
-                    latitude = response.city.coord.lat,
-                    longitude = response.city.coord.lon,
-                    timestamp = dto.dt,
-                    tempCurrent = dto.main.temp,
-                    tempMin = dto.main.tempMin,
-                    tempMax = dto.main.tempMax,
-                    conditionText = dto.weather.firstOrNull()?.main ?: "Unknown",
-                    iconUrl = "https://openweathermap.org/img/wn/${dto.weather.firstOrNull()?.icon}@2x.png",
-                    humidity = dto.main.humidity,
-                    windSpeed = dto.wind.speed
-                )
-            }
+            val entities = response.toWeatherEntities()
 
             // Transaction: Clear old data (if refreshing) and insert new
             database.withTransaction {
