@@ -1,8 +1,11 @@
 package com.miguelrivera.vindexweather
 
 import android.app.Application
+import androidx.hilt.work.HiltWorkerFactory
+import androidx.work.Configuration
 import coil.ImageLoader
 import coil.ImageLoaderFactory
+import com.miguelrivera.vindexweather.data.worker.WorkManagerScheduler
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 import javax.inject.Provider
@@ -10,21 +13,38 @@ import javax.inject.Provider
 /**
  * [VindexWeatherApp] serves as the Hilt Entry Point for the app.
  *
- * * @HiltAndroidApp: Triggers Dagger's code generation, creating a base class
- * that serves as the application-level dependency container.
- * * ImageLoaderFactory: Configures Coil globally, allowing us to inject custom
- * OkHttp clients (e.g., with caching or auth interceptors) into the image loader later.
+ * Responsible for initializing global configurations:
+ * * [HiltAndroidApp]: Generates the Dagger/Hilt dependency graph.
+ * * [ImageLoaderFactory]: Configures Coil with a shared OkHttp client.
+ * * [Configuration.Provider]: Configures WorkManager to support Hilt-injected workers.
  */
 @HiltAndroidApp
-class VindexWeatherApp : Application(), ImageLoaderFactory {
+class VindexWeatherApp : Application(), ImageLoaderFactory, Configuration.Provider {
 
     /**
-     * A [Provider] is injected here to lazy-load the [ImageLoader].
-     * This prevents instantiating the entire network stack instantly at app startup
-     * if it's not strictly needed immediately (startup performance optimization).
+     * Lazy-loaded provider for the [ImageLoader].
+     * Delays initialization of the network stack until the first image request
+     * to optimize application startup performance.
      */
     @Inject
     lateinit var imageLoader: Provider<ImageLoader>
 
+    @Inject
+    lateinit var workerFactory: HiltWorkerFactory
+
+    @Inject
+    lateinit var workManagerScheduler: WorkManagerScheduler
+
+    override fun onCreate() {
+        super.onCreate()
+        // Triggers the periodic background sync schedule immediately upon app launch.
+        workManagerScheduler.schedulePeriodicSync()
+    }
+
     override fun newImageLoader(): ImageLoader = imageLoader.get()
+
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
 }
