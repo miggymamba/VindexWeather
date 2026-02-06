@@ -129,6 +129,10 @@ dependencies {
     implementation(libs.room.paging)
     ksp(libs.room.compiler)
 
+    // Location Services
+    implementation(libs.play.services.location)
+    implementation(libs.kotlinx.coroutines.play.services)
+
     // Local Testing
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockk)

@@ -15,7 +15,7 @@ ksp = "2.3.4"
 coreKtx = "1.17.0"
 lifecycle = "2.10.0"
 activityCompose = "1.12.3"
-splashscreen = "1.0.1"
+splashscreen = "1.2.0"
 
 # Jetpack Compose
 composeBom = "2026.01.01"
@@ -31,6 +31,10 @@ workManager = "2.11.1"
 
 # Persistence (Room)
 room = "2.8.4"
+
+# Location
+playServicesLocation = "21.3.0"
+coroutinesPlayServices = "1.10.2"
 
 # Networking & Serialization
 retrofit = "3.0.0"
@@ -79,6 +83,10 @@ room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 room-paging = { group = "androidx.room", name = "room-paging", version.ref = "room" }
+
+# Location
+play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
+kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "coroutinesPlayServices" }
 
 # Networking & Serialization
 retrofit-core = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
