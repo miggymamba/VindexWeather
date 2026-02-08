@@ -138,6 +138,7 @@ dependencies {
     testImplementation(libs.test.mockk)
     testImplementation(libs.test.mockwebserver)
     testImplementation(libs.androidx.paging.testing)
+    testImplementation(libs.test.kotlinx.coroutines)
 
     // Instrumented Testing
     androidTestImplementation(libs.test.androidx.junit)
