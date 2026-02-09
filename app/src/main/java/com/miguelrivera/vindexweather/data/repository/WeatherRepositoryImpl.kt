@@ -8,12 +8,14 @@ import androidx.paging.map
 import androidx.room.withTransaction
 import com.miguelrivera.vindexweather.core.common.Result
 import com.miguelrivera.vindexweather.data.local.database.WeatherDatabase
+import com.miguelrivera.vindexweather.data.mapper.toCityList
 import com.miguelrivera.vindexweather.data.mapper.toWeather
 import com.miguelrivera.vindexweather.data.mapper.toWeatherEntities
 import com.miguelrivera.vindexweather.data.remote.WeatherApi
 import com.miguelrivera.vindexweather.data.remote.WeatherRemoteMediator
 import com.miguelrivera.vindexweather.di.Dispatcher
 import com.miguelrivera.vindexweather.di.VindexDispatchers
+import com.miguelrivera.vindexweather.domain.model.City
 import com.miguelrivera.vindexweather.domain.model.Weather
 import com.miguelrivera.vindexweather.domain.repository.WeatherRepository
 import kotlinx.coroutines.CoroutineDispatcher
@@ -76,6 +78,18 @@ class WeatherRepositoryImpl @Inject constructor(
             pagingSourceFactory = pagingSourceFactory
         ).flow.map { pagingData ->
             pagingData.map { entity -> entity.toWeather() }
+        }
+    }
+
+    override suspend fun searchCity(query: String): Result<List<City>> {
+        return withContext(ioDispatcher) {
+            try {
+                val response = api.searchCity(query = query)
+                val cities = response.toCityList()
+                Result.Success(cities)
+            } catch (e: Exception) {
+                Result.Error(e,"Failed to search city: $query.")
+            }
         }
     }
 }

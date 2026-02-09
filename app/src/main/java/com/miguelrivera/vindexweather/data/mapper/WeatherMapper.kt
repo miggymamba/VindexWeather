@@ -1,7 +1,9 @@
 package com.miguelrivera.vindexweather.data.mapper
 
 import com.miguelrivera.vindexweather.data.local.database.entity.WeatherEntity
+import com.miguelrivera.vindexweather.data.remote.dto.GeocodingDto
 import com.miguelrivera.vindexweather.data.remote.dto.WeatherResponseDto
+import com.miguelrivera.vindexweather.domain.model.City
 import com.miguelrivera.vindexweather.domain.model.Weather
 
 /**
@@ -40,6 +42,22 @@ fun WeatherResponseDto.toWeatherEntities(): List<WeatherEntity> {
             iconUrl = "https://openweathermap.org/img/wn/${dto.weather.firstOrNull()?.icon}@2x.png",
             humidity = dto.main.humidity,
             windSpeed = dto.wind.speed
+        )
+    }
+}
+
+/**
+ * Maps a list of Geocoding DTOs to Domain City models.
+ */
+
+fun List<GeocodingDto>.toCityList(): List<City> {
+    return this.map { dto ->
+        City(
+            name = dto.name,
+            latitude = dto.lat,
+            longitude = dto.lon,
+            country = dto.country,
+            state = dto.state
         )
     }
 }

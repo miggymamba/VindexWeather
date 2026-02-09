@@ -2,6 +2,7 @@ package com.miguelrivera.vindexweather.domain.repository
 
 import androidx.paging.PagingData
 import com.miguelrivera.vindexweather.core.common.Result
+import com.miguelrivera.vindexweather.domain.model.City
 import com.miguelrivera.vindexweather.domain.model.Weather
 import kotlinx.coroutines.flow.Flow
 
@@ -24,4 +25,9 @@ interface WeatherRepository {
      * The UI collects this Flow to display the list.
      */
     fun getPagedWeather(latitude: Double, longitude: Double): Flow<PagingData<Weather>>
+
+    /**
+     * Searches for a city by name and returns a list of candidate cities.
+     */
+    suspend fun searchCity(query: String): Result<List<City>>
 }
