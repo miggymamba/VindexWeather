@@ -18,8 +18,8 @@ class SyncWeatherUseCaseTest {
     @Test
     fun `invoke calls repository syncWeather and returns success`() = runTest {
         // Arrange
-        val lat = 35.0
-        val lon = 139.0
+        val lat = 35.6809843
+        val lon = 139.7621861
         coEvery { repository.syncWeather(lat, lon) } returns Result.Success(Unit)
 
         // Act
@@ -33,8 +33,8 @@ class SyncWeatherUseCaseTest {
     @Test
     fun `invoke returns error when repository fails`() = runTest {
         // Arrange
-        val lat = 35.0
-        val lon = 139.0
+        val lat = 35.6809843
+        val lon = 139.7621861
         val expectedError = IOException("Network error")
         coEvery { repository.syncWeather(lat, lon) } returns Result.Error(expectedError)
 

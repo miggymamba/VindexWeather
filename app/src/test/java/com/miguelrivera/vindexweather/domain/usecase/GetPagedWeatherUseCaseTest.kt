@@ -17,8 +17,8 @@ class GetPagedWeatherUseCaseTest {
     @Test
     fun `invoke delegates to repository getPagedWeather`() {
         // Arrange
-        val lat = 35.0
-        val lon = 139.0
+        val lat = 35.6809843
+        val lon = 139.7621861
         val expectedFlow = flowOf(PagingData.from(emptyList<Weather>()))
 
         every { repository.getPagedWeather(lat, lon) } returns expectedFlow
