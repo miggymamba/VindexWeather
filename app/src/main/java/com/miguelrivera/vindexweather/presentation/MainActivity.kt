@@ -7,6 +7,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -19,6 +21,7 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -26,11 +29,18 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             VindexWeatherTheme {
+                // Calculate the dynamic window size (handles rotation and foldables)
+                val windowSizeClass = calculateWindowSizeClass(this)
+
                 // Initialize the single source of truth for navigation
                 val navController = rememberNavController()
-                // Create the actions wrapper
                 val navActions = remember(navController) { NavActions(navController) }
-                CompositionLocalProvider(LocalNavActions provides navActions) {
+
+                // Provide both Navigation and WindowSize globally down the Compose tree
+                CompositionLocalProvider(
+                    LocalNavActions provides navActions,
+                    LocalWindowSize provides windowSizeClass
+                ) {
                     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                         VindexNavHost(
                             navController = navController,
