@@ -50,6 +50,11 @@ android {
                 "proguard-rules.pro"
             )
         }
+
+        debug {
+            enableAndroidTestCoverage = true
+            enableUnitTestCoverage = true
+        }
     }
 
     compileOptions {
@@ -107,6 +112,9 @@ dependencies {
     // Jetpack Paging
     implementation(libs.androidx.paging.runtime)
     implementation(libs.androidx.paging.compose)
+
+    // Google Fonts
+    implementation(libs.androidx.compose.ui.text.google.fonts)
 
     // Dependency Injection (Hilt)
     implementation(libs.hilt.android)
