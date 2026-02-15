@@ -5,9 +5,11 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class WeatherResponseDto(
+    @SerialName("cod") val cod: String,
+    @SerialName("message") val message: Int,
+    @SerialName("cnt") val count: Int,
     @SerialName("list") val list: List<WeatherDto>,
-    @SerialName("city") val city: CityDto,
-    @SerialName("cnt") val count: Int
+    @SerialName("city") val city: CityDto
 )
 
 /**
@@ -22,6 +24,7 @@ data class CityDto(
     @SerialName("name") val name: String,
     @SerialName("coord") val coord: CoordDto,
     @SerialName("country") val country: String,
+    // Population can be 0 or missing in some tiers
     @SerialName("population") val population: Long = 0,
     @SerialName("timezone") val timezone: Long,
     @SerialName("sunrise") val sunrise: Long,
@@ -38,6 +41,7 @@ data class CoordDto(
  * Represents a specific forecast time entry.
  *
  * @property pop Probability of precipitation. Values vary between 0 and 1 (0% to 100%).
+ * @property visibility Visibility, meter. The maximum value of the visibility is 10km.
  */
 @Serializable
 data class WeatherDto(
@@ -46,8 +50,10 @@ data class WeatherDto(
     @SerialName("weather") val weather: List<WeatherDescriptionDto>,
     @SerialName("clouds") val clouds: CloudsDto,
     @SerialName("wind") val wind: WindDto,
-    @SerialName("visibility") val visibility: Int,
-    @SerialName("pop") val pop: Double,
+    // Visibility is optional in API response. Default to 10km (Clear) if missing.
+    @SerialName("visibility") val visibility: Int = 10000,
+    // Probability of precipitation can be 0 and sometimes omitted
+    @SerialName("pop") val pop: Double = 0.0,
     @SerialName("sys") val sys: SysDto,
     @SerialName("dt_txt") val dtTxt: String
 )
@@ -65,9 +71,11 @@ data class MainDto(
     @SerialName("temp_min") val tempMin: Double,
     @SerialName("temp_max") val tempMax: Double,
     @SerialName("pressure") val pressure: Int,
-    @SerialName("sea_level") val seaLevel: Int = 0,
-    @SerialName("grnd_level") val grndLevel: Int = 0,
+    // Sea level and Ground level are not always returned
+    @SerialName("sea_level") val seaLevel: Int? = null,
+    @SerialName("grnd_level") val grndLevel: Int? = null,
     @SerialName("humidity") val humidity: Int,
+    // Internal parameter, often 0 or missing
     @SerialName("temp_kf") val tempKf: Double = 0.0
 )
 
@@ -94,6 +102,7 @@ data class CloudsDto(
 data class WindDto(
     @SerialName("speed") val speed: Double,
     @SerialName("deg") val deg: Int,
+    // Gust is optional, only present if wind is significant
     @SerialName("gust") val gust: Double? = null
 )
 
