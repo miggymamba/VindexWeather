@@ -18,4 +18,13 @@
     <!-- Previews / Placeholders -->
     <string name="preview_weather_placeholder">Weather Content Placeholder</string>
     <string name="preview_search_placeholder">Search Action Placeholder</string>
+
+    <!-- Formatting -->
+    <!-- %1$d ensures proper localization of digits (e.g. Arabic numerals) automatically -->
+    <string name="format_temperature_celsius">%1$d°C</string>
+    <string name="format_temperature_fahrenheit">%1$d°F</string>
+
+    <!-- Units -->
+    <string name="unit_celsius_label">°C</string>
+    <string name="unit_fahrenheit_label">°F</string>
 </resources>

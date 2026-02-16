@@ -1,16 +1,19 @@
 package com.miguelrivera.vindexweather.presentation.dashboard
 
+import com.miguelrivera.vindexweather.data.local.datastore.TemperatureUnit
+
 /**
- * Represents the immutable UI state for the Dashboard screen.
- * Used for non-paging data (like transient errors or loading status of the sync operation).
+ * Immutable representation of the Dashboard screen's UI state.
+ *
+ * Aggregates transient network operation status (syncing/error) with persistent
+ * user preferences (temperature units) to ensure a Unidirectional Data Flow (UDF).
+ *
+ * @property isSyncing True when a background data synchronization is active.
+ * @property error Non-null string message if the last operation failed; null otherwise.
+ * @property temperatureUnit The user's preferred unit for display logic.
  */
-sealed interface DashboardState {
-    /** The default state when data is loaded and no operations are pending. */
-    data object Idle : DashboardState
-
-    /** Indicates a background synchronization (pull-to-refresh) is in progress. */
-    data object Syncing : DashboardState
-
-    /** Represents a transient error (e.g., network failure during sync). */
-    data class Error(val message: String) : DashboardState
-}
+data class DashboardState (
+    val isSyncing: Boolean = false,
+    val error: String? = null,
+    val temperatureUnit: TemperatureUnit = TemperatureUnit.METRIC
+)

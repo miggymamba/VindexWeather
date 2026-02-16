@@ -2,11 +2,14 @@ package com.miguelrivera.vindexweather.presentation.theme
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Shapes
-import androidx.compose.ui.unit.dp
 
-// Different corner radius values for the application
+/**
+ * Material 3 Shape definitions mapped to the application's Design System.
+ *
+ * Uses [Dimens] to ensure consistency across all component corners.
+ */
 val Shapes = Shapes(
-    small = RoundedCornerShape(8.dp),  // Buttons, Text Fields
-    medium = RoundedCornerShape(12.dp), // Cards, Dialogs
-    large = RoundedCornerShape(16.dp)  // Large containers, Sheets
+    small = RoundedCornerShape(Dimens.CornerRadiusSmall),  // Buttons, Text Fields
+    medium = RoundedCornerShape(Dimens.CornerRadiusMedium), // Cards, Dialogs
+    large = RoundedCornerShape(Dimens.CornerRadiusLarge)  // Large containers, Sheets
 )
