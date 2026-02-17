@@ -3,6 +3,7 @@ package com.miguelrivera.vindexweather.presentation.common
 import android.content.Context
 import com.miguelrivera.vindexweather.R
 import com.miguelrivera.vindexweather.data.local.datastore.TemperatureUnit
+import kotlin.math.roundToInt
 
 /**
  * Utility object responsible for domain-agnostic temperature formatting.
@@ -32,6 +33,6 @@ object TemperatureFormatter {
             TemperatureUnit.IMPERIAL -> R.string.format_temperature_fahrenheit
         }
 
-        return context.getString(resId, convertedTemp.toString())
+        return context.getString(resId, convertedTemp.roundToInt())
     }
 }

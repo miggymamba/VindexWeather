@@ -66,9 +66,9 @@ class WeatherRemoteMediator @Inject constructor(
             database.withTransaction {
                 if (loadType == LoadType.REFRESH) {
                     database.weatherDao.clearAll()
-                } else {
-                    database.weatherDao.upsertWeather(entities)
                 }
+
+                database.weatherDao.upsertWeather(entities)
             }
 
             MediatorResult.Success(endOfPaginationReached = true)

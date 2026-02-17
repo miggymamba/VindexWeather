@@ -22,6 +22,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.miguelrivera.vindexweather.R
 import com.miguelrivera.vindexweather.domain.model.City
+import com.miguelrivera.vindexweather.domain.model.Coordinates
 import com.miguelrivera.vindexweather.presentation.LocalNavActions
 import com.miguelrivera.vindexweather.presentation.search.components.CityResultItem
 import com.miguelrivera.vindexweather.presentation.search.components.SearchShimmerItem
@@ -76,7 +77,10 @@ fun SearchScreen(
                             CityResultItem(
                                 city = city,
                                 onClick = {
-                                    navActions.navigateBack()
+                                    // Pass selected city coordinates back to the caller (Dashboard)
+                                    navActions.navigateBackBackWithResult(
+                                        Coordinates(city.latitude,city.longitude)
+                                    )
                                 }
                             )
                         }

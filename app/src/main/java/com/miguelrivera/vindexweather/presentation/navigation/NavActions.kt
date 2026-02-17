@@ -1,6 +1,7 @@
 package com.miguelrivera.vindexweather.presentation.navigation
 
 import androidx.navigation.NavHostController
+import com.miguelrivera.vindexweather.domain.model.Coordinates
 
 /**
  * Encapsulates navigation logic to prevent leaking [NavHostController] into UI screens.
@@ -15,8 +16,17 @@ class NavActions(private val navController: NavHostController) {
         }
     }
 
-    fun navigateBack() {
+    /**
+     * Navigates back to the previous screen and passes a result (Selected City Coordinates).
+     * Used by the Search Screen to return the user's selection.
+     */
+    fun navigateBackBackWithResult(coordinates: Coordinates) {
+        val previousBackstackEntry = navController.previousBackStackEntry
+        previousBackstackEntry?.savedStateHandle?.set(KEY_SELECTED_COORDINATES, coordinates)
         navController.popBackStack()
     }
 
+    companion object {
+        const val KEY_SELECTED_COORDINATES = "selected_coordinates"
+    }
 }

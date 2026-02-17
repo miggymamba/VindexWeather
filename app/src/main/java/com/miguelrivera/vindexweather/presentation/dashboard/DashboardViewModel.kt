@@ -114,6 +114,19 @@ class DashboardViewModel @Inject constructor(
     }
 
     /**
+     * Updates the current location coordinates for the weather feed.
+     * This triggers the Pager to fetch new data from the DB/API automatically via [flatMapLatest].
+     *
+     * @param coordinates The new location selected by the user.
+     */
+    fun updateLocation(coordinates: Coordinates) {
+        if (_currentCoordinates.value != coordinates) {
+            _currentCoordinates.value = coordinates
+            triggerSync()
+        }
+    }
+
+    /**
      * Updates the user's preferred temperature unit in the persistent store.
      *
      * @param unit The new [TemperatureUnit] to persist.

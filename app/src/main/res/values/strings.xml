@@ -23,10 +23,18 @@
     <!-- Dashboard UI -->
     <string name="dashboard_weather_section_title">Current Weather Data</string>
     <string name="dashboard_action_search">Go to Search</string>
+    <string name="weather_icon_desc">Weather Condition Icon</string>
+    <string name="weather_high_low_format">H: %1$s  L: %2$s</string>
+    <string name="weather_list_error">Failed to load weather data.</string>
+    <string name="action_retry">Retry</string>
 
     <!-- Previews / Placeholders -->
     <string name="preview_weather_placeholder">Weather Content Placeholder</string>
     <string name="preview_search_placeholder">Search Action Placeholder</string>
+    <string name="preview_city_name">Tokyo</string>
+    <string name="preview_city_details">Japan, Asia</string>
+    <string name="preview_condition">Clear Sky</string>
+    <string name="preview_date">Mon, 12:00 PM</string>
 
     <!-- Formatting -->
     <!-- %1$d ensures proper localization of digits (e.g. Arabic numerals) automatically -->

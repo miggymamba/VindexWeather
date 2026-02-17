@@ -9,9 +9,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -32,13 +33,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.miguelrivera.vindexweather.R
 import com.miguelrivera.vindexweather.data.local.datastore.TemperatureUnit
+import com.miguelrivera.vindexweather.domain.model.Weather
 import com.miguelrivera.vindexweather.presentation.LocalNavActions
 import com.miguelrivera.vindexweather.presentation.LocalWindowSize
 import com.miguelrivera.vindexweather.presentation.common.LocationRationaleDialog
 import com.miguelrivera.vindexweather.presentation.common.RequestLocationPermission
 import com.miguelrivera.vindexweather.presentation.dashboard.components.UnitToggleControl
+import com.miguelrivera.vindexweather.presentation.dashboard.components.WeatherCard
 import com.miguelrivera.vindexweather.presentation.theme.Dimens
 import kotlinx.coroutines.launch
 
@@ -64,6 +70,7 @@ fun DashboardScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val weatherPagingItems = viewModel.weatherPagingDataFlow.collectAsLazyPagingItems()
 
     // Resources extracted for use within CoroutineScope
     val deniedMessage = stringResource(R.string.location_denied_fallback)
@@ -71,7 +78,7 @@ fun DashboardScreen(
 
     // Permission Flow State
     var showRationaleDialog by remember { mutableStateOf(false) }
-    var permissionContinuation by remember { mutableStateOf<() -> Unit>({ }) }
+    var permissionContinuation by remember { mutableStateOf({ }) }
 
     val isExpanded = windowSize.widthSizeClass != WindowWidthSizeClass.Compact
 
@@ -129,10 +136,9 @@ fun DashboardScreen(
             currentUnit = uiState.temperatureUnit,
             onUnitToggled = viewModel::toggleTemperatureUnit,
             weatherSlot = {
-                Text(
-                    text = stringResource(R.string.dashboard_weather_section_title),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.surface
+                WeatherPagedList(
+                    weatherItems = weatherPagingItems,
+                    temperatureUnit = uiState.temperatureUnit
                 )
             },
             searchActionSlot = {
@@ -150,12 +156,16 @@ fun DashboardScreen(
  *
  * Utilizes the Slot API pattern ([weatherSlot], [searchActionSlot]) to decouple the
  * structural layout from specific content implementations. This enables isolated testing,
- * easier previews, and flexibility for future UI changes (e.g., swapping the column for a list).
+ * easier previews, and flexibility for future UI changes.
  *
+ * Note: The [weatherSlot] is contained within a Box with `weight(1f)` to ensure the LazyColumn
+ * inside it consumes available space properly without nested scrolling conflicts.
+ *
+ * @param modifier The modifier to be applied to the layout.
  * @param isExpanded Dictates the structural layout (Row vs Column) for responsive design (e.g., Tablets).
  * @param currentUnit The current display unit for the toggle control.
  * @param onUnitToggled Event callback for the unit toggle interaction.
- * @param weatherSlot Slot for main weather content injection.
+ * @param weatherSlot Slot for main weather content injection (typically a List).
  * @param searchActionSlot Slot for search action/input injection.
  * @param snackbarHost Slot for snackbar host placement.
  */
@@ -169,8 +179,6 @@ fun DashboardLayout(
     searchActionSlot: @Composable () -> Unit,
     snackbarHost: @Composable () -> Unit = { }
 ) {
-    val scrollState = rememberScrollState()
-
     Scaffold(
         modifier = modifier.fillMaxSize(),
         snackbarHost = snackbarHost
@@ -190,11 +198,14 @@ fun DashboardLayout(
                 ) {
                     Column(
                         modifier = Modifier
+                            .fillMaxSize()
                             .padding(Dimens.PaddingMedium)
-                            .verticalScroll(scrollState)
                     ) {
                         UnitToggleControl(currentUnit, onUnitToggled)
-                        weatherSlot()
+                        // Weather Slot takes remaining space
+                        Box(modifier = Modifier.weight(1f)) {
+                            weatherSlot()
+                        }
                     }
                 }
                 Box(
@@ -208,11 +219,8 @@ fun DashboardLayout(
             }
         } else {
             Column(
-                modifier = contentModifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                modifier = contentModifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Row(
                     modifier = Modifier
@@ -222,8 +230,101 @@ fun DashboardLayout(
                 ) {
                     UnitToggleControl(currentUnit, onUnitToggled)
                 }
-                weatherSlot()
-                searchActionSlot()
+
+                // Weather Slot takes remaining space above the search button
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(horizontal = Dimens.PaddingMedium)
+                ) {
+                    weatherSlot()
+                }
+
+                Box(modifier = Modifier.padding(Dimens.PaddingMedium)) {
+                    searchActionSlot()
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Internal component to handle Paging 3 LoadStates and list rendering.
+ *
+ * @param weatherItems The lazy paging items collected from the PagingData flow.
+ * @param temperatureUnit The current unit for temperature display.
+ */
+@Composable
+private fun WeatherPagedList(
+    weatherItems: LazyPagingItems<Weather>,
+    temperatureUnit: TemperatureUnit
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(Dimens.PaddingSmall)
+    ) {
+        // 1. Loading State (Initial Refresh)
+        if (weatherItems.loadState.refresh is LoadState.Loading && weatherItems.itemCount == 0) {
+            item {
+                Box(modifier = Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+        }
+
+        // 2. Error State (Initial Refresh)
+        if (weatherItems.loadState.refresh is LoadState.Error && weatherItems.itemCount == 0) {
+            item {
+                Box(modifier = Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(stringResource(R.string.weather_list_error))
+                        Button(onClick = { weatherItems.retry() }) {
+                            Text(stringResource(R.string.action_retry))
+                        }
+                    }
+                }
+            }
+        }
+
+        // 3. The Data List
+        items(count = weatherItems.itemCount) { index ->
+            val weather = weatherItems[index]
+            if (weather != null) {
+                WeatherCard(
+                    weather = weather,
+                    temperatureUnit = temperatureUnit
+                )
+            }
+        }
+
+        // 4. Append Loading State (Infinite Scroll Spinner)
+        if (weatherItems.loadState.append is LoadState.Loading) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(Dimens.PaddingMedium),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.width(Dimens.IconSizeSmall))
+                }
+            }
+        }
+
+        // 5. Append Error State
+        if (weatherItems.loadState.append is LoadState.Error) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(Dimens.PaddingMedium),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Button(onClick = { weatherItems.retry()} ) {
+                        Text(stringResource(R.string.action_retry))
+                    }
+                }
             }
         }
     }
@@ -246,7 +347,12 @@ private fun DashboardLayoutCompactPreview() {
             isExpanded = false,
             currentUnit = TemperatureUnit.METRIC,
             onUnitToggled = { },
-            weatherSlot = { Text(stringResource(R.string.preview_weather_placeholder)) },
+            weatherSlot = {
+                Text(
+                    text = stringResource(R.string.preview_weather_placeholder),
+                    modifier = Modifier.padding(Dimens.PaddingMedium)
+                )
+            },
             searchActionSlot = { Button(onClick = {}) { Text(stringResource(R.string.preview_search_placeholder)) } },
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
         )

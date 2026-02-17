@@ -8,7 +8,6 @@ import androidx.compose.ui.unit.dp
  * Adopts a semantic naming convention (Small, Medium, Large) to maintain
  * consistency across the Design System and avoid "magic numbers" in UI components.
  */
-
 object Dimens {
     // Spacing & Padding
     val PaddingSmall = 8.dp
@@ -20,9 +19,12 @@ object Dimens {
     val ToggleSwitchSpacing = 8.dp
     val SearchBarHeight = 56.dp
     val SearchItemMinHeight = 72.dp
+    val WeatherCardMinHeight = 100.dp
     val IconSizeSmall = 24.dp
     val IconSizeMedium = 48.dp
+    val IconSizeLarge = 64.dp
     val ShimmerCornerRadius = 4.dp
+    val CardElevation = 4.dp
 
     // Shimmer Placeholders (Text Simulation)
     val ShimmerCityNameWidth = 150.dp
