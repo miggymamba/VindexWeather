@@ -53,6 +53,8 @@ fun UnitToggleControl(
     }
 }
 
+// --- Previews ---
+
 @Preview(name = "Metric (Celsius) Selected", showBackground = true)
 @Composable
 private fun UnitToggleControlMetricPreview() {

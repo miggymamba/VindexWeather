@@ -229,6 +229,8 @@ fun DashboardLayout(
     }
 }
 
+// --- Previews ---
+
 @Preview(name = "Compact - Light", showBackground = true)
 @Preview(
     name = "Compact - Dark",

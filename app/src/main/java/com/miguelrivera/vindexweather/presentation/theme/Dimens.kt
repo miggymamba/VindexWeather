@@ -18,11 +18,21 @@ object Dimens {
 
     // Component Specific
     val ToggleSwitchSpacing = 8.dp
+    val SearchBarHeight = 56.dp
+    val SearchItemMinHeight = 72.dp
     val IconSizeSmall = 24.dp
-    val IconSizeLarge = 48.dp
+    val IconSizeMedium = 48.dp
+    val ShimmerCornerRadius = 4.dp
+
+    // Shimmer Placeholders (Text Simulation)
+    val ShimmerCityNameWidth = 150.dp
+    val ShimmerCityNameHeight = 20.dp
+    val ShimmerSubtitleWidth = 100.dp
+    val ShimmerSubtitleHeight = 16.dp
 
     // Corners
     val CornerRadiusSmall = 8.dp
     val CornerRadiusMedium = 12.dp
     val CornerRadiusLarge = 16.dp
+    val CornerRadiusRound = 50.dp // For fully rounded search bars
 }

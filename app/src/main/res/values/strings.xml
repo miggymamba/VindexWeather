@@ -11,6 +11,15 @@
     <string name="location_denied_fallback">Location denied. Displaying default location (Tokyo).</string>
     <string name="location_required_generic">Location permission is required for local weather.</string>
 
+    <!-- Search UI -->
+    <string name="search_hint">Search for a city…</string>
+    <string name="search_icon_desc">Search Icon</string>
+    <string name="clear_search_desc">Clear Search Query</string>
+    <string name="search_no_results">No cities found matching your query.</string>
+    <string name="search_start_prompt">Type to find a city.</string>
+    <string name="search_error_generic">Something went wrong. Please try again.</string>
+    <string name="search_result_format">%1$s, %2$s</string> <!-- e.g. London, GB -->
+
     <!-- Dashboard UI -->
     <string name="dashboard_weather_section_title">Current Weather Data</string>
     <string name="dashboard_action_search">Go to Search</string>
