@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -39,8 +40,19 @@ class DashboardViewModel @Inject constructor(
     private val settingsDataStore: SettingsDataStore
 ) : ViewModel() {
 
-    private val defaultCoordinates = Coordinates(35.6809843, 139.7621861)
+    private val defaultCoordinates = Coordinates(35.6809843, 139.7621861) // Tokyo
     private val _currentCoordinates = MutableStateFlow(defaultCoordinates)
+
+    init {
+        // Initialize from DataStore. If a location was saved, use it.
+        viewModelScope.launch {
+            settingsDataStore.selectedLocation.collect { savedCoords ->
+                if (savedCoords != null && savedCoords != _currentCoordinates.value) {
+                    _currentCoordinates.value = savedCoords
+                }
+            }
+        }
+    }
 
     /**
      * Cold stream of weather data.
@@ -81,23 +93,33 @@ class DashboardViewModel @Inject constructor(
     /**
      * Initiates a weather synchronization.
      *
-     * Attempts to resolve the current device location. If permission is denied or location
-     * is unavailable, falls back to default coordinates (Tokyo). Updates the coordinate flow
-     * if the location has changed.
+     * Attempts to resolve the current device location ONLY if we don't have a saved location
+     * or explicit user intent to "use current location".
+     *
+     * For this MVP: Pull-to-refresh syncs the *currently displayed* location.
      */
     fun triggerSync() {
         viewModelScope.launch {
             _isSyncing.value = true
             _syncError.value = null
 
-            val location = locationTracker.getCurrentLocation()
-            val targetCoords = location ?: defaultCoordinates
+            // Use the current coordinates (restored from DataStore or Default)
+            var targetCoords = _currentCoordinates.value
 
-            if (targetCoords != _currentCoordinates.value) {
-                _currentCoordinates.value = targetCoords
+            // If we are still at default coordinates (and haven't loaded from DataStore yet),
+            // try to get GPS. This handles the "First Run" scenario.
+            // We check if DataStore is empty to decide if we should override with GPS.
+            val savedLocation = settingsDataStore.selectedLocation.first()
+            if (savedLocation == null && targetCoords == defaultCoordinates) {
+                locationTracker.getCurrentLocation()?.let { gpsCoords ->
+                    targetCoords = gpsCoords
+                    // Save GPS location as the selected location so it persists
+                    updateLocation(gpsCoords)
+                }
             }
 
-            val result = syncWeatherUseCase(latitude = targetCoords.latitude,
+            val result = syncWeatherUseCase(
+                latitude = targetCoords.latitude,
                 longitude = targetCoords.longitude
             )
 
@@ -114,7 +136,7 @@ class DashboardViewModel @Inject constructor(
     }
 
     /**
-     * Updates the current location coordinates for the weather feed.
+     * Updates the current location coordinates for the weather feed and persists it.
      * This triggers the Pager to fetch new data from the DB/API automatically via [flatMapLatest].
      *
      * @param coordinates The new location selected by the user.
@@ -122,6 +144,10 @@ class DashboardViewModel @Inject constructor(
     fun updateLocation(coordinates: Coordinates) {
         if (_currentCoordinates.value != coordinates) {
             _currentCoordinates.value = coordinates
+            // Persist to DataStore
+            viewModelScope.launch {
+                settingsDataStore.saveLocation(coordinates)
+            }
             triggerSync()
         }
     }
