@@ -4,7 +4,7 @@
 
 **Vindex Weather** is an Android application built to demonstrate a production-ready approach to handling unstable network conditions, complex UI states, and background synchronization in a modern mobile environment.
 
-Rather than treating a weather app as a simple API fetcher, this project approaches it as a study in **Offline-First** architecture. It prioritizes data consistency, single source of truth (SSOT) patterns, and seamless recovery from process death or network fragmentation. The codebase prioritizes maintainability, strict separation of concerns, and verifiable correctness through testing.
+Rather than treating a weather app as a simple API fetcher, this project approaches it as a study in **High-Availability Offline-First** architecture. It prioritizes data consistency, single source of truth (SSOT) patterns, and seamless recovery from process death or network fragmentation. The codebase prioritizes maintainability, strict separation of concerns, and verifiable correctness through testing.
 
 ## Key Features
 
@@ -68,7 +68,7 @@ This project is intended as a practical demonstration of the following skills an
 
 2. Ensure you have the latest **Android Studio (Otter or later)**.
 
-3. Obtain a free API Key from [OpenWeatherMap](https://openweathermap.org/api).
+3. Obtain a free API Key from [OpenWeatherMap](https://openweathermap.org/api "null").
 
 4. Create a `local.properties` file in the root directory and add:
 
@@ -167,6 +167,17 @@ sequenceDiagram
 |**Search Results**|<img src="docs/images/search_results_light.png" width="300" alt="Search Results (Light)" />|
 |**Empty Search** (Edge Case)|<img src="docs/images/search_empty_light.png" width="300" alt="Search Empty (Light)" />|
 
+## Future Roadmap
+
+- **Zero-Flicker Sync:** Optimization of `RemoteMediator` to use intelligent Upsert/Delete logic instead of `clearAll()` to eliminate UI flashes during data refreshes.
+
+- **Screenshot Testing:** Integration of Roborazzi to verify UI regression across different device form factors (Foldable/Tablet).
+
+- **Edge-to-Edge Polish:** Refinement of system bar transparency and content insets for a fully immersive UI.
+
+- **Error Handling:** Implementation of a generic `PagedListWrapper` to map specific network exceptions to distinct Domain Errors.
+
+
 ## License
 
-Vindex Weather is compliant with **Apache License 2.0**. See [LICENSE](https://github.com/miggymamba/VindexWeather/blob/main/LICENSE) for more information.
+Vindex Weather is compliant with **Apache License 2.0**. See [LICENSE](https://github.com/miggymamba/VindexWeather/blob/main/LICENSE "null") for more information.
