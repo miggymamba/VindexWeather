@@ -8,7 +8,7 @@ Rather than treating a weather app as a simple API fetcher, this project approac
 
 - **Offline-First Architecture:** The UI consumes data exclusively from the local database (Room). Network calls update the database, observing the "Single Source of Truth" principle.
 
-- **Resilient Synchronization:** Background updates are managed via `WorkManager` with strict constraints (UNMETERED + CHARGING) to respect user resources.
+- **Resilient Synchronization:** Background updates are managed via `WorkManager` with optimized constraints (UNMETERED + BATTERY NOT LOW). This balances keeping the offline cache fresh throughout the day while respecting the user's critical battery levels.
 
 - **Reactive MVI:** UI state is managed via `StateFlow` and immutable data models, ensuring predictable rendering across configuration changes.
 
@@ -21,13 +21,15 @@ Following the [Now in Android](https://github.com/android/nowinandroid) philosop
 
 ### Layer Breakdown
 
-- **`:app`**: The entry point, containing `MainActivity` and global Hilt configuration.
+The project follows a package-by-layer structure within a single module to cleanly separate concerns:
 
-- **`:presentation`**: Jetpack Compose UI, ViewModels, and UI state management.
+- **`app/`**: The entry point, containing `MainActivity` and global Hilt configuration.
 
-- **`:domain`**: The "Brain." Contains pure Kotlin Business Logic, UseCases, and Repository interfaces. **No Android dependencies.**
+- **`presentation/`**: Jetpack Compose UI, ViewModels, and UI state management.
 
-- **`:data`**: Implementation of repositories, Retrofit services, and Room persistence. Handles the synchronization logic between Remote and Local data sources.
+- **`domain/`**: The "Brain." Contains pure Kotlin Business Logic, UseCases, and Repository interfaces. **No Android dependencies.**
+
+- **`data/`**: Implementation of repositories, Retrofit services, and Room persistence. Handles the synchronization logic between Remote and Local data sources.
 
 
 ### Network & Sync Stack
@@ -55,7 +57,7 @@ This project is intended as a practical demonstration of the following skills an
 
 - Writing unit tests that validate business logic (UseCases) and integration tests for the Repository layer
 
-- Applying "Staff-level" build configuration using Version Catalogs and strict compiler flags
+- Applying **industry-standard** build configuration using Version Catalogs and strict compiler flags
 
 
 ## Development Setup
@@ -99,23 +101,24 @@ This project intentionally does not aim to:
 
 ## Sequence Diagram
 
-````mermaid
+```mermaid
 sequenceDiagram
     autonumber
     participant UI as Compose UI
     participant VM as ViewModel (MVI)
-    participant UC as Use Case (Domain)
-    participant REPO as Repository (Data)
+    participant UCS as SyncUseCase
+    participant UCO as GetPagedWeatherUseCase
+    participant REPO as Repository
     participant DB as Room Database
     participant API as Remote API
 
     Note over UI, API: [WEATHER REFRESH FLOW]
 
     UI->>VM: UserIntent.Refresh
-    VM->>VM: State = Loading
-    VM->>UC: GetWeather(lat, lon)
+    VM->>VM: isSyncing = true
+    VM->>UCS: SyncWeather(lat, lon)
     
-    UC->>REPO: syncWeather()
+    UCS->>REPO: syncWeather()
     activate REPO
     
     REPO->>API: GET /weather
@@ -124,38 +127,43 @@ sequenceDiagram
     deactivate API
     
     REPO->>REPO: Map DTO to Entity
-    REPO->>DB: Insert/Update Weather
+    REPO->>DB: Upsert Weather
     activate DB
     DB-->>REPO: Success
     deactivate DB
     
+    REPO-->>UCS: Result.Success
     deactivate REPO
+    UCS-->>VM: Result.Success
+    VM->>VM: isSyncing = false
 
-    Note right of REPO: Single Source of Truth updates
+    Note right of DB: REACTIVE UPDATE (Parallel)
 
-    REPO->>UC: Emit New Data (Flow)
-    UC->>VM: WeatherData
-    VM->>VM: State = Success
-    VM-->>UI: Recompose Screen
-````
+    DB->>REPO: Invalidate PagingSource
+    REPO->>UCO: Emit PagingData (Flow)
+    UCO->>VM: Emit PagingData (Flow)
+    VM-->>UI: Recompose List (New Data)
+```
 
 ## Screenshots
 
 ### Dark Mode
 
-|Screen Name|Images|
+|Feature|Screenshot|
 |---|---|
-|**Dashboard**|[Placeholder]|
-|**Search**|[Placeholder]|
-|**Forecast**|[Placeholder]|
+|**Dashboard** (Main View)|<img src="docs/images/dashboard_weather_dark.png" width="300" alt="Dashboard Weather (Dark)" />|
+|**Location Permission** (Edge Case)|<img src="docs/images/permission_rationale_dialog_dark.png" width="300" alt="Permission Rationale Dialog (Dark)" />|
+|**Search Results**|<img src="docs/images/search_results_dark.png" width="300" alt="Search Results (Dark)" />|
+|**Empty Search** (Edge Case)|<img src="docs/images/search_empty_dark.png" width="300" alt="Search Empty (Dark)" />|
 
 ### Light Mode
 
-|Screen Name|Images|
+|Feature|Screenshot|
 |---|---|
-|**Dashboard**|[Placeholder]|
-|**Search**|[Placeholder]|
-|**Forecast**|[Placeholder]|
+|**Dashboard** (Main View)|<img src="docs/images/dashboard_weather_light.png" width="300" alt="Dashboard Weather (Light)" />|
+|**Location Permission** (Edge Case)|<img src="docs/images/permission_rationale_dialog_light.png" width="300" alt="Permission Rationale Dialog (Light)" />|
+|**Search Results**|<img src="docs/images/search_results_light.png" width="300" alt="Search Results (Light)" />|
+|**Empty Search** (Edge Case)|<img src="docs/images/search_empty_light.png" width="300" alt="Search Empty (Light)" />|
 
 ## License
 
