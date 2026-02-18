@@ -1,3 +1,5 @@
+[![Android CI](https://github.com/miggymamba/VindexWeather/actions/workflows/ci.yml/badge.svg)](https://github.com/miggymamba/VindexWeather/actions/workflows/ci.yml)
+
 # Vindex Weather
 
 **Vindex Weather** is an Android application built to demonstrate a production-ready approach to handling unstable network conditions, complex UI states, and background synchronization in a modern mobile environment.
