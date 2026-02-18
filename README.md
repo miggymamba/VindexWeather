@@ -64,7 +64,7 @@ This project is intended as a practical demonstration of the following skills an
 
 1. Clone the repository.
 
-2. Ensure you have the latest **Android Studio Ladybug (or later)**.
+2. Ensure you have the latest **Android Studio (Otter or later)**.
 
 3. Obtain a free API Key from [OpenWeatherMap](https://openweathermap.org/api).
 
