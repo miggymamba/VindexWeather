@@ -9,6 +9,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.miguelrivera.vindexweather.data.local.datastore.TemperatureUnit
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -32,6 +33,8 @@ class DashboardLayoutTest {
         composeTestRule.setContent {
             DashboardLayout(
                 isExpanded = false,
+                currentUnit = TemperatureUnit.METRIC,
+                onUnitToggled = {},
                 weatherSlot = {
                     Text(text = "Weather Content", Modifier.testTag(weatherSlotTag))
                 },
@@ -51,6 +54,8 @@ class DashboardLayoutTest {
         composeTestRule.setContent {
             DashboardLayout(
                 isExpanded = true,
+                currentUnit = TemperatureUnit.METRIC,
+                onUnitToggled = {},
                 weatherSlot = {
                     Text(text = "Weather Content", Modifier.testTag(weatherSlotTag))
                 },
@@ -72,6 +77,8 @@ class DashboardLayoutTest {
         composeTestRule.setContent {
             DashboardLayout(
                 isExpanded = false,
+                currentUnit = TemperatureUnit.METRIC,
+                onUnitToggled = {},
                 weatherSlot = {
                     Text(text = "Weather Content", modifier = Modifier.testTag(weatherSlotTag))
                 },

@@ -31,19 +31,19 @@ class WeatherRemoteMediator @Inject constructor(
         state: PagingState<Int, WeatherEntity>
     ): MediatorResult {
         return try {
-            // Determine if we should load data based on the loadType.
+            // Determine when to load data based on the loadType.
             // REFRESH: Falls through to the API call below.
             // PREPEND: Returns EndOfPagination (no history).
             // APPEND: Returns EndOfPagination (no infinite scroll for this MVP).
             when (loadType) {
                 LoadType.PREPEND -> {
-                    // We never prepend data (no "past" weather in this endpoint).
+                    // No prepending data (no "past" weather in this endpoint).
                     return MediatorResult.Success(endOfPaginationReached = true)
                 }
 
                 LoadType.APPEND -> {
-                    // If we have existing data, we stop because the 5-day forecast is a single-shot list.
-                    // We do not support "infinite scrolling" to future dates beyond the initial fetch.
+                    // If there is existing data, mediator should stop because the 5-day forecast is a single-shot list.
+                    // No support for "infinite scrolling" to future dates beyond the initial fetch.
                     val lastItem = state.lastItemOrNull()
                     if (lastItem != null) {
                         return MediatorResult.Success(endOfPaginationReached = true)

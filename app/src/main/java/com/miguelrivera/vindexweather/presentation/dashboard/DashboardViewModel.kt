@@ -93,7 +93,7 @@ class DashboardViewModel @Inject constructor(
     /**
      * Initiates a weather synchronization.
      *
-     * Attempts to resolve the current device location ONLY if we don't have a saved location
+     * Attempts to resolve the current device location ONLY if app doesn't have a saved location
      * or explicit user intent to "use current location".
      *
      * For this MVP: Pull-to-refresh syncs the *currently displayed* location.
@@ -106,9 +106,9 @@ class DashboardViewModel @Inject constructor(
             // Use the current coordinates (restored from DataStore or Default)
             var targetCoords = _currentCoordinates.value
 
-            // If we are still at default coordinates (and haven't loaded from DataStore yet),
+            // If the app is still at default coordinates (and haven't loaded from DataStore yet),
             // try to get GPS. This handles the "First Run" scenario.
-            // We check if DataStore is empty to decide if we should override with GPS.
+            // Check if DataStore is empty to decide if the app should override with GPS.
             val savedLocation = settingsDataStore.selectedLocation.first()
             if (savedLocation == null && targetCoords == defaultCoordinates) {
                 locationTracker.getCurrentLocation()?.let { gpsCoords ->

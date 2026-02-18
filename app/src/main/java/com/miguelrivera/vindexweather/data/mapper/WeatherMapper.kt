@@ -8,7 +8,7 @@ import com.miguelrivera.vindexweather.domain.model.Weather
 
 /**
  * Converts a database entity into a clean domain model.
- * * We separate the Data Layer (Entity) from the Domain Layer (Model) to ensure
+ * * The Data Layer (Entity) is separated from the Domain Layer (Model) to ensure
  * that database schema changes do not ripple through to the UI.
  */
 fun WeatherEntity.toWeather(): Weather {

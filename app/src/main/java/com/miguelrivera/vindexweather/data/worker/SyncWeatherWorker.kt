@@ -27,15 +27,15 @@ class SyncWeatherWorker @AssistedInject constructor(
 
     override suspend fun doWork(): WorkerResult {
         // 1. Get current location (if permission granted)
-        // If we don't have location permissions or GPS is off, we can't sync local weather.
+        // If no location permissions granted or GPS is off, app can't sync local weather.
         val location = locationTracker.getCurrentLocation() ?: return WorkerResult.failure()
 
         // 2. Trigger Sync
         return when (repository.syncWeather(location.latitude, location.longitude)) {
             is VindexResult.Success -> WorkerResult.success()
             is VindexResult.Error -> {
-                // We treat all errors as transient and retry using WorkManager's backoff policy.
-                // In a production app, we would distinguish between permanent failures (4xx)
+                // All errors are treated as transient and retry using WorkManager's backoff policy.
+                // In a production app, there will be handling for permanent failures (4xx)
                 // and transient network issues to avoid unnecessary retries.
                 WorkerResult.retry()
             }

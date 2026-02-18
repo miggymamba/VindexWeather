@@ -143,7 +143,7 @@ class WeatherRepositoryTest {
         // Assert
         assertTrue("Expected Result.Error but got $result", result is Result.Error)
 
-        // Critical: Ensure we did NOT wipe the cache on a failed sync
+        // Critical: Ensure app did NOT wipe the cache on a failed sync
         coVerify(exactly = 0) { weatherDao.clearAll() }
     }
 }
