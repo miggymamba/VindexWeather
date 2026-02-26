@@ -43,6 +43,7 @@ import com.miguelrivera.vindexweather.presentation.LocalNavActions
 import com.miguelrivera.vindexweather.presentation.LocalWindowSize
 import com.miguelrivera.vindexweather.presentation.common.LocationRationaleDialog
 import com.miguelrivera.vindexweather.presentation.common.RequestLocationPermission
+import com.miguelrivera.vindexweather.presentation.dashboard.components.CurrentWeatherHeader
 import com.miguelrivera.vindexweather.presentation.dashboard.components.UnitToggleControl
 import com.miguelrivera.vindexweather.presentation.dashboard.components.WeatherCard
 import com.miguelrivera.vindexweather.presentation.theme.Dimens
@@ -288,13 +289,25 @@ private fun WeatherPagedList(
         }
 
         // 3. The Data List
-        items(count = weatherItems.itemCount) { index ->
-            val weather = weatherItems[index]
-            if (weather != null) {
-                WeatherCard(
-                    weather = weather,
-                    temperatureUnit = temperatureUnit
-                )
+        if (weatherItems.itemCount > 0) {
+            item {
+                val currentWeather = weatherItems[0]
+                if (currentWeather != null) {
+                    CurrentWeatherHeader(
+                        weather = currentWeather,
+                        temperatureUnit = temperatureUnit
+                    )
+                }
+            }
+
+            items(count = weatherItems.itemCount - 1) { index ->
+                val weather = weatherItems[index + 1]
+                if (weather != null) {
+                    WeatherCard(
+                        weather = weather,
+                        temperatureUnit = temperatureUnit
+                    )
+                }
             }
         }
 

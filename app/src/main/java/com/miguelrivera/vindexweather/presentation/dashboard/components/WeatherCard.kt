@@ -33,7 +33,6 @@ import com.miguelrivera.vindexweather.domain.model.Weather
 import com.miguelrivera.vindexweather.presentation.common.DateFormatter
 import com.miguelrivera.vindexweather.presentation.common.TemperatureFormatter
 import com.miguelrivera.vindexweather.presentation.theme.Dimens
-import com.miguelrivera.vindexweather.presentation.theme.SoftBlue
 
 /**
  * A card component displaying weather details for a specific time slot.
@@ -92,7 +91,7 @@ fun WeatherCard(
                     modifier = Modifier
                         .size(Dimens.IconSizeMedium)
                         .clip(CircleShape)
-                        .background(SoftBlue)
+                        .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.84f))
                 ) {
                     AsyncImage(
                         model = ImageRequest.Builder(context)
