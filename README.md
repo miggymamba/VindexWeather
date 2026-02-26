@@ -105,46 +105,74 @@ This project intentionally does not aim to:
 
 ```mermaid
 sequenceDiagram
-    autonumber
-    participant UI as Compose UI
-    participant VM as ViewModel (MVI)
-    participant UCS as SyncUseCase
-    participant UCO as GetPagedWeatherUseCase
-    participant REPO as Repository
-    participant DB as Room Database
-    participant API as Remote API
+   autonumber
+   participant UI as Compose UI
+   participant NAV as NavActions
+   participant VM as ViewModel (MVI)
+   participant UCS as SyncUseCase
+   participant UCO as GetPagedWeatherUseCase
+   participant SEARCH as SearchCityUseCase
+   participant REPO as Repository
+   participant DB as Room Database
+   participant DS as DataStore
+   participant API as Remote API
 
-    Note over UI, API: [WEATHER REFRESH FLOW]
+   Note over UI, API: [WEATHER REFRESH FLOW - OFFLINE FIRST]
 
-    UI->>VM: UserIntent.Refresh
-    VM->>VM: isSyncing = true
-    VM->>UCS: SyncWeather(lat, lon)
-    
-    UCS->>REPO: syncWeather()
-    activate REPO
-    
-    REPO->>API: GET /weather
-    activate API
-    API-->>REPO: 200 OK (JSON)
-    deactivate API
-    
-    REPO->>REPO: Map DTO to Entity
-    REPO->>DB: Upsert Weather
-    activate DB
-    DB-->>REPO: Success
-    deactivate DB
-    
-    REPO-->>UCS: Result.Success
-    deactivate REPO
-    UCS-->>VM: Result.Success
-    VM->>VM: isSyncing = false
+   UI->>VM: UserIntent.Refresh
+   VM->>VM: isSyncing = true
+   VM->>UCS: SyncWeather(lat, lon)
+   UCS->>REPO: syncWeather()
+   activate REPO
+   REPO->>API: GET /weather
+   activate API
+   API-->>REPO: 200 OK (JSON)
+   deactivate API
+   REPO->>REPO: Map DTO to Entity
+   REPO->>DB: Upsert Weather
+   activate DB
+   DB-->>REPO: Success
+   deactivate DB
+   REPO-->>UCS: Result.Success
+   deactivate REPO
+   UCS-->>VM: Result.Success
+   VM->>VM: isSyncing = false
 
-    Note right of DB: REACTIVE UPDATE (Parallel)
+   Note right of DB: REACTIVE UPDATE (Parallel)
 
-    DB->>REPO: Invalidate PagingSource
-    REPO->>UCO: Emit PagingData (Flow)
-    UCO->>VM: Emit PagingData (Flow)
-    VM-->>UI: Recompose List (New Data)
+   DB->>REPO: Invalidate PagingSource
+   REPO->>UCO: Emit PagingData (Flow)
+   UCO->>VM: Emit PagingData (Flow)
+   VM-->>UI: Recompose List (New Data)
+
+   Note over UI, API: [CITY SEARCH FLOW - DIRECT API]
+
+   UI->>VM: onQueryChange("Tokyo")
+   VM->>VM: Debounce (300ms)
+   VM->>SEARCH: SearchCity("Tokyo")
+   SEARCH->>REPO: searchCity("Tokyo")
+   activate REPO
+   REPO->>API: GET /geo/1.0/direct
+   activate API
+   API-->>REPO: JSON Response
+   deactivate API
+   REPO-->>SEARCH: Result.Success(List<City>)
+   deactivate REPO
+   SEARCH-->>VM: Result.Success
+   VM-->>UI: State = Success(List)
+
+   Note over UI, DS: [CITY SELECTION & PERSISTENCE]
+
+   UI->>NAV: navigateBackWithResult(Coordinates)
+   NAV-->>UI: Pop BackStack to Dashboard (NavHostHandle)
+   UI->>VM: updateLocation(Coordinates)
+   VM->>DS: saveLocation(lat, lon)
+   activate DS
+   DS-->>VM: Success
+   deactivate DS
+   Note right of VM: Triggers Refresh Flow
+   VM->>UCS: SyncWeather(lat, lon)
+
 ```
 
 ## Screenshots
