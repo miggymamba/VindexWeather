@@ -208,4 +208,4 @@ sequenceDiagram
 
 ## License
 
-Vindex Weather is compliant with **Apache License 2.0**. See [LICENSE](https://github.com/miggymamba/VindexWeather/blob/main/LICENSE "null") for more information.
+Vindex Weather is compliant with **Apache License 2.0**. See [LICENSE](LICENSE) for more information.
