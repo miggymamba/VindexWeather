@@ -16,6 +16,33 @@ Rather than treating a weather app as a simple API fetcher, this project approac
 
 - **Adaptive Layouts:** Supports dynamic resizing for Foldables and Tablets using standard `WindowSizeClass` implementation.
 
+---
+
+## Tech Stack
+
+![Kotlin](https://img.shields.io/badge/Kotlin-2.3.10-7F52FF?logo=kotlin&logoColor=white)
+![KSP](https://img.shields.io/badge/KSP-2.3.6-7F52FF?logo=kotlin&logoColor=white)
+![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?logo=jetpackcompose&logoColor=white)
+![Hilt](https://img.shields.io/badge/Hilt-DI-F8821A)
+![Room](https://img.shields.io/badge/Room-Database-4285F4)
+![Paging 3](https://img.shields.io/badge/Paging%203-RemoteMediator-4285F4)
+![WorkManager](https://img.shields.io/badge/WorkManager-Background%20Sync-4285F4)
+![License](https://img.shields.io/badge/License-Apache%202.0-green)
+
+| Layer | Technology |
+|---|---|
+| UI | Jetpack Compose — Material 3 |
+| State | MVI — `StateFlow` + sealed interface |
+| DI | Hilt |
+| Database | Room + Paging 3 RemoteMediator |
+| Networking | Retrofit 3.0 / OkHttp 5 |
+| Background Sync | WorkManager |
+| Image Loading | Coil |
+| Location | FusedLocationProvider |
+| Testing | JUnit 4 · MockK · MockWebServer · ComposeTestRule |
+| CI | GitHub Actions |
+
+---
 
 ## Technical Architecture
 
@@ -44,6 +71,7 @@ The project follows a package-by-layer structure within a single module to clean
 
 - **Coil:** Coroutine-backed image loading pipeline for weather assets.
 
+---
 
 ## What This Project Demonstrates
 
@@ -61,6 +89,7 @@ This project is intended as a practical demonstration of the following skills an
 
 - Applying **industry-standard** build configuration using Version Catalogs and strict compiler flags
 
+---
 
 ## Development Setup
 
@@ -78,6 +107,7 @@ This project is intended as a practical demonstration of the following skills an
 
 5. Build the project.
 
+---
 
 ## Testing Strategy
 
@@ -89,6 +119,7 @@ This project emphasizes meaningful unit testing over artificial coverage metrics
 
 - **UI Layer:** "Golden Path" automated tests using `ComposeTestRule` to verify critical user journeys.
 
+---
 
 ## Non-Goals
 
@@ -100,6 +131,7 @@ This project intentionally does not aim to:
 
 - Support legacy Android views (strictly Jetpack Compose)
 
+---
 
 ## Sequence Diagram
 
@@ -175,6 +207,8 @@ sequenceDiagram
 
 ```
 
+---
+
 ## Screenshots
 
 ### Dark Mode
@@ -195,6 +229,8 @@ sequenceDiagram
 |**Search Results**|<img src="docs/images/search_results_light.png" width="300" alt="Search Results (Light)" />|
 |**Empty Search** (Edge Case)|<img src="docs/images/search_empty_light.png" width="300" alt="Search Empty (Light)" />|
 
+---
+
 ## Future Roadmap
 
 - **Zero-Flicker Sync:** Optimization of `RemoteMediator` to use intelligent Upsert/Delete logic instead of `clearAll()` to eliminate UI flashes during data refreshes.
@@ -205,6 +241,7 @@ sequenceDiagram
 
 - **Error Handling:** Implementation of a generic `PagedListWrapper` to map specific network exceptions to distinct Domain Errors.
 
+---
 
 ## License
 
