@@ -15,12 +15,14 @@ import com.miguelrivera.vindexweather.domain.usecase.SyncWeatherUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -41,54 +43,56 @@ class DashboardViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val defaultCoordinates = Coordinates(35.6809843, 139.7621861) // Tokyo
-    private val _currentCoordinates = MutableStateFlow(defaultCoordinates)
 
-    init {
-        // Initialize from DataStore. If a location was saved, use it.
-        viewModelScope.launch {
-            settingsDataStore.selectedLocation.collect { savedCoords ->
-                if (savedCoords != null && savedCoords != _currentCoordinates.value) {
-                    _currentCoordinates.value = savedCoords
-                }
-            }
-        }
-    }
+    private val _uiState = MutableStateFlow(DashboardUiState(coordinates = defaultCoordinates))
+    val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
     /**
      * Cold stream of weather data.
      * [cachedIn] ensures the paging state survives configuration changes.
      */
     val weatherPagingDataFlow: Flow<PagingData<Weather>> =
-        _currentCoordinates.flatMapLatest { coords ->
-            getPagedWeatherUseCase(latitude = coords.latitude, longitude = coords.longitude)
-        }.cachedIn(viewModelScope)
+        _uiState
+            .map { it.coordinates }
+            .distinctUntilChanged()
+            .flatMapLatest { coords ->
+                getPagedWeatherUseCase(latitude = coords.latitude, longitude = coords.longitude)
+            }
+            .cachedIn(viewModelScope)
 
-    // Internal mutable states for transient sync operations
-    private val _isSyncing = MutableStateFlow(false)
-    private val _syncError = MutableStateFlow<String?>(null)
+    init {
+        // Initialize from DataStore. If a location was saved, use it.
+        viewModelScope.launch {
+            settingsDataStore.selectedLocation.collect { savedCoords ->
+                if (savedCoords != null && savedCoords != _uiState.value.coordinates) {
+                    _uiState.update { it.copy(coordinates = savedCoords) }
+                }
+            }
+        }
+        viewModelScope.launch {
+            settingsDataStore.temperatureUnit.collect { unit ->
+                _uiState.update { it.copy(temperatureUnit = unit) }
+            }
+        }
+    }
 
     /**
-     * The single source of truth for the UI state.
+     * Single entry point for all UI events and system interactions.
      *
-     * Combines transient sync state with the persistent temperature unit preference.
-     * Uses [SharingStarted.WhileSubscribed] (5000ms) to stop upstream collection when the UI
-     * is not visible, preventing memory leaks and wasted resources.
+     * Routes incoming [DashboardIntent]s to their respective private handlers. This guarantees
+     * that all state mutations occur atomically and prevents race conditions from concurrent
+     * UI triggers.
+     *
+     * @param intent The specific action to be processed.
      */
-    val uiState: StateFlow<DashboardState> = combine(
-        _isSyncing,
-        _syncError,
-        settingsDataStore.temperatureUnit
-    ) { isSyncing, error, unit ->
-        DashboardState(
-            isSyncing,
-            error,
-            unit
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = DashboardState()
-    )
+    fun processIntent(intent: DashboardIntent) {
+        when (intent) {
+            is DashboardIntent.Refresh -> triggerSync()
+            is DashboardIntent.UpdateLocation -> updateLocation(intent.coordinates)
+            is DashboardIntent.ClearError -> clearError()
+            is DashboardIntent.ToggleUnit -> toggleTemperatureUnit(intent.unit)
+        }
+    }
 
     /**
      * Initiates a weather synchronization.
@@ -98,13 +102,12 @@ class DashboardViewModel @Inject constructor(
      *
      * For this MVP: Pull-to-refresh syncs the *currently displayed* location.
      */
-    fun triggerSync() {
+    private fun triggerSync() {
         viewModelScope.launch {
-            _isSyncing.value = true
-            _syncError.value = null
+            _uiState.update { it.copy(isSyncing = true, error = null) }
 
             // Use the current coordinates (restored from DataStore or Default)
-            var targetCoords = _currentCoordinates.value
+            var targetCoords = _uiState.value.coordinates
 
             // If the app is still at default coordinates (and haven't loaded from DataStore yet),
             // try to get GPS. This handles the "First Run" scenario.
@@ -114,7 +117,7 @@ class DashboardViewModel @Inject constructor(
                 locationTracker.getCurrentLocation()?.let { gpsCoords ->
                     targetCoords = gpsCoords
                     // Save GPS location as the selected location so it persists
-                    updateLocation(gpsCoords)
+                    processIntent(DashboardIntent.UpdateLocation(gpsCoords))
                 }
             }
 
@@ -124,13 +127,17 @@ class DashboardViewModel @Inject constructor(
             )
 
             when (result) {
-                is Result.Success -> _isSyncing.value = false
+                is Result.Success -> _uiState.update { it.copy(isSyncing = false) }
                 is Result.Error -> {
-                    _isSyncing.value = false
-                    _syncError.value = result.message ?: "Unknown Sync Error."
+                    _uiState.update {
+                        it.copy(
+                            isSyncing = false,
+                            error = result.message ?: "Unknown Sync Error."
+                        )
+                    }
                 }
 
-                is Result.Loading -> _isSyncing.value = true
+                is Result.Loading -> _uiState.update { it.copy(isSyncing = true) }
             }
         }
     }
@@ -141,14 +148,14 @@ class DashboardViewModel @Inject constructor(
      *
      * @param coordinates The new location selected by the user.
      */
-    fun updateLocation(coordinates: Coordinates) {
-        if (_currentCoordinates.value != coordinates) {
-            _currentCoordinates.value = coordinates
+    private fun updateLocation(coordinates: Coordinates) {
+        if (_uiState.value.coordinates != coordinates) {
+            _uiState.update { it.copy(coordinates = coordinates) }
             // Persist to DataStore
             viewModelScope.launch {
                 settingsDataStore.saveLocation(coordinates)
             }
-            triggerSync()
+            processIntent(DashboardIntent.Refresh)
         }
     }
 
@@ -157,7 +164,7 @@ class DashboardViewModel @Inject constructor(
      *
      * @param unit The new [TemperatureUnit] to persist.
      */
-    fun toggleTemperatureUnit(unit: TemperatureUnit) {
+    private fun toggleTemperatureUnit(unit: TemperatureUnit) {
         viewModelScope.launch {
             settingsDataStore.setTemperatureUnit(unit)
         }
@@ -167,7 +174,7 @@ class DashboardViewModel @Inject constructor(
      * Resets the transient error message state.
      * Should be called by the UI after the error has been displayed (e.g., in a Snackbar).
      */
-    fun clearError() {
-        _syncError.value = null
+    private fun clearError() {
+        _uiState.update { it.copy(error = null) }
     }
 }

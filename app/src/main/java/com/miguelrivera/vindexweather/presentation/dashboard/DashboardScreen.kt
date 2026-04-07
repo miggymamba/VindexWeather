@@ -55,7 +55,9 @@ import kotlinx.coroutines.launch
  * Responsibilities:
  * 1. Orchestrates the interaction between the [DashboardViewModel] (State Holder) and the [DashboardLayout] (UI).
  * 2. Manages side effects such as Location Permissions, Snackbars, and Navigation actions.
- * 3. Observes the [DashboardState] via [collectAsStateWithLifecycle] to ensure UI updates are lifecycle-aware.
+ * 3. Observes the [DashboardUiState] via [collectAsStateWithLifecycle] to ensure UI updates are lifecycle-aware.
+ * 4. Dispatches all UI events and user interactions through a single intent pipeline
+ * via [DashboardViewModel.processIntent] to maintain strict Unidirectional Data Flow.
  *
  * This component remains decoupled from specific layout implementations by delegating rendering
  * to [DashboardLayout].
@@ -87,8 +89,8 @@ fun DashboardScreen(
     LaunchedEffect(uiState.error) {
         uiState.error?.let { errorMessage ->
             scope.launch {
+                viewModel.processIntent(DashboardIntent.ClearError)
                 snackbarHostState.showSnackbar(message = errorMessage)
-                viewModel.clearError()
             }
         }
     }
@@ -96,10 +98,10 @@ fun DashboardScreen(
     // Headless effect: Request permission on start, handling all edge cases
     RequestLocationPermission(
         onPermissionGranted = {
-            viewModel.triggerSync()
+            viewModel.processIntent(DashboardIntent.Refresh)
         },
         onPermissionDenied = {
-            viewModel.triggerSync()
+            viewModel.processIntent(DashboardIntent.Refresh)
             scope.launch {
                 snackbarHostState.showSnackbar(message = deniedMessage)
             }
@@ -119,7 +121,7 @@ fun DashboardScreen(
             onDismiss = {
                 showRationaleDialog = false
                 // If dismissed without action, treat as denial and fallback
-                viewModel.triggerSync()
+                viewModel.processIntent(DashboardIntent.Refresh)
                 scope.launch {
                     snackbarHostState.showSnackbar(requiredMessage)
                 }
@@ -129,13 +131,13 @@ fun DashboardScreen(
 
     PullToRefreshBox(
         isRefreshing = uiState.isSyncing,
-        onRefresh = { viewModel.triggerSync() },
+        onRefresh = { viewModel.processIntent(DashboardIntent.Refresh) },
         modifier = modifier.fillMaxSize()
     ) {
         DashboardLayout(
             isExpanded = isExpanded,
             currentUnit = uiState.temperatureUnit,
-            onUnitToggled = viewModel::toggleTemperatureUnit,
+            onUnitToggled = { newUnit -> viewModel.processIntent(DashboardIntent.ToggleUnit(newUnit)) },
             weatherSlot = {
                 WeatherPagedList(
                     weatherItems = weatherPagingItems,
@@ -334,7 +336,7 @@ private fun WeatherPagedList(
                         .padding(Dimens.PaddingMedium),
                     contentAlignment = Alignment.Center
                 ) {
-                    Button(onClick = { weatherItems.retry()} ) {
+                    Button(onClick = { weatherItems.retry() }) {
                         Text(stringResource(R.string.action_retry))
                     }
                 }
