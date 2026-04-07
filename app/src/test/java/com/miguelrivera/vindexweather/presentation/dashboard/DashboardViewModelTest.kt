@@ -66,7 +66,7 @@ class DashboardViewModelTest {
         dashboardViewModel = DashboardViewModel(getPagedWeatherUseCase, syncWeatherUseCase, locationTracker, settingsDataStore)
 
         // Act
-        dashboardViewModel.updateLocation(newLocation)
+        dashboardViewModel.processIntent(DashboardIntent.UpdateLocation(newLocation))
 
         // Assert
         coVerify { settingsDataStore.saveLocation(newLocation) }
@@ -81,7 +81,7 @@ class DashboardViewModelTest {
         dashboardViewModel = DashboardViewModel(getPagedWeatherUseCase, syncWeatherUseCase, locationTracker, settingsDataStore)
 
         // Act
-        dashboardViewModel.toggleTemperatureUnit(TemperatureUnit.IMPERIAL)
+        dashboardViewModel.processIntent(DashboardIntent.ToggleUnit(TemperatureUnit.IMPERIAL))
 
         // Assert
         coVerify { settingsDataStore.setTemperatureUnit(TemperatureUnit.IMPERIAL) }

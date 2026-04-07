@@ -10,6 +10,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.miguelrivera.vindexweather.domain.model.Coordinates
+import com.miguelrivera.vindexweather.presentation.dashboard.DashboardIntent
 import com.miguelrivera.vindexweather.presentation.dashboard.DashboardScreen
 import com.miguelrivera.vindexweather.presentation.dashboard.DashboardViewModel
 import com.miguelrivera.vindexweather.presentation.search.SearchScreen
@@ -43,7 +44,7 @@ fun VindexNavHost(
 
             LaunchedEffect(selectedCoordinates) {
                 selectedCoordinates?.let { coordinates ->
-                    viewModel.updateLocation(coordinates)
+                    viewModel.processIntent(DashboardIntent.UpdateLocation(coordinates))
                     // Clear the result so it doesn't re-trigger on configuration change
                     entry.savedStateHandle.remove<Coordinates>(NavActions.KEY_SELECTED_COORDINATES)
                 }
